@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Karaokê</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        #catalogo {
+            flex: 1;
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            position: relative;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+        #aviso {
+            color: red;
+            text-align: center;
+            padding: 20px;
+        }
+        footer {
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            padding: 5px 0;
+            height: 40px;
+        }
+        #pesquisa {
+            margin: 10px auto;
+            width: 80%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Catálogo de Karaokê</h1>
+    <input id="pesquisa" type="search" placeholder="Pesquise por cantor, número ou letra...">
+    <div id="aviso"></div>
+    <div id="catalogo">
+        <table>
+            <thead>
+                <tr>
+                    <th>Cantor</th>
+                    <th>Número</th>
+                    <th>Música</th>
+                </tr>
+            </thead>
+            <tbody id="tabela">
+                <!-- As linhas da tabela serão preenchidas pelo JavaScript -->
+            </tbody>
+        </table>
+    </div>
+    <footer>
+        <p>&copy; 2023 Catálogo de Karaokê. Todos os direitos reservados.</p>
+    </footer>
+
+    <script>
+        let cache = null;  // Variável para armazenar dados em cache
+
+        async function carregarCatalogo() {
+            const mensagemErro = 'Ocorreu um erro ao carregar o catálogo. Tente novamente mais tarde.';
+            try {
+                if (!cache) {
+                    const response = await fetch('songs.json');
+                    if (!response.ok) {
+                        throw new Error('Arquivo não encontrado ou inválido.');
+                    }
+                    cache = await response.json();  // Armazena dados em cache
+                }
+
+                if (!Array.isArray(cache) || cache.length === 0) {
+                    throw new Error('O JSON está vazio ou não é uma lista.');
+                }
+
+                const tabela = document.getElementById('tabela');
+                tabela.innerHTML = '';
+                cache.forEach(musica => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${musica.cantor || 'Desconhecido'}</td>
+                        <td>${musica.numero || 'N/A'}</td>
+                        <td>${musica.musica || 'Sem título'}</td>
+                    `;
+                    tabela.appendChild(row);
+                });
+            } catch (erro) {
+                console.error('Erro:', erro);
+                document.getElementById('aviso').textContent = mensagemErro;
+            }
+        }
+
+        function filtrarTabela(event) {
+            const palavraChave = event.target.value.toLowerCase();
+            const linhas = document.querySelectorAll('#tabela tr');
+
+            linhas.forEach(linha => {
+                const textoLinha = linha.textContent.toLowerCase();
+                if (textoLinha.includes(palavraChave)) {
+                    linha.style.display = '';
+                } else {
+                    linha.style.display = 'none';
+                }
+            });
+        }
+
+        document.getElementById('pesquisa').addEventListener('input', filtrarTabela);
+        carregarCatalogo();
+    </script>
+</body>
+</html>
